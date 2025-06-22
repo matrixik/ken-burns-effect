@@ -265,7 +265,7 @@ def process_kenburns(objectSettings, objectCommon, moduleInpaint):
 ##########################################################
 
 class Stream:
-	ptr = torch.cuda.current_stream()
+	ptr = torch.cuda.current_stream().cuda_stream
 # end
 
 def preprocess_kernel(strKernel, objectVariables):
@@ -376,7 +376,7 @@ def preprocess_kernel(strKernel, objectVariables):
 
 @cupy.memoize(for_each_device=True)
 def launch_kernel(strFunction, strKernel):
-	return cupy.cuda.compile_with_cache(strKernel, tuple([ '-I ' + os.environ['CUDA_HOME'], '-I ' + os.environ['CUDA_HOME'] + '/include' ])).get_function(strFunction)
+	return cupy.RawKernel(strKernel, strFunction, options=tuple([ '-I ' + os.environ['CUDA_HOME'], '-I ' + os.environ['CUDA_HOME'] + '/include' ]))
 # end
 
 def depth_to_points(tensorDepth, dblFocal):

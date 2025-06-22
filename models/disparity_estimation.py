@@ -83,7 +83,7 @@ class Semantics(nn.Module):
 	def __init__(self):
 		super(Semantics, self).__init__()
 
-		moduleVgg = torchvision.models.vgg19_bn(pretrained=True).features.eval()
+		moduleVgg = torchvision.models.vgg19_bn(weights='VGG19_BN_Weights.IMAGENET1K_V1').features.eval()
 
 		self.moduleVgg = nn.Sequential(
 			moduleVgg[0:3],

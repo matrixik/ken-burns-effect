@@ -5,3 +5,6 @@
 __init__.py
 __pycache__/
 .ipynb_checkpoints
+
+images/kbe/
+.claude/settings.local.json
