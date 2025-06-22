@@ -4,7 +4,7 @@ import os
 import cv2
 import imageio as io
 import moviepy
-import moviepy.editor
+from moviepy import ImageSequenceClip
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -33,7 +33,7 @@ class Pipeline():
 
         self.moduleSemantics = Semantics().to(device).eval()
         self.moduleDisparity = Disparity().to(device).eval()
-        self.moduleMaskrcnn = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True).to(device).eval()
+        self.moduleMaskrcnn = torchvision.models.detection.maskrcnn_resnet50_fpn(weights='MaskRCNN_ResNet50_FPN_Weights.COCO_V1').to(device).eval()
         if pretrain:
             self.moduleRefine = RefineP().to(device).eval()
         else:
@@ -129,6 +129,6 @@ class Pipeline():
         # Create video output
         if output_path is not None:
             if pretrained_estim:
-                moviepy.editor.ImageSequenceClip(sequence=[ numpyFrame[:, :, :] for numpyFrame in numpyResult + list(reversed(numpyResult))[1:] ], fps=25).write_videofile(os.path.join(output_path,'3d_kbe.mp4'), codec='mpeg4')
+                ImageSequenceClip(sequence=[ numpyFrame[:, :, :] for numpyFrame in numpyResult + list(reversed(numpyResult))[1:] ], fps=25).write_videofile(os.path.join(output_path,'3d_kbe.mp4'), codec='mpeg4')
             else:
-                moviepy.editor.ImageSequenceClip(sequence=[ numpyFrame[:, :, ::-1] for numpyFrame in numpyResult + list(reversed(numpyResult))[1:] ], fps=25).write_videofile(os.path.join(output_path,'3d_kbe.mp4'), codec='mpeg4')
+                ImageSequenceClip(sequence=[ numpyFrame[:, :, ::-1] for numpyFrame in numpyResult + list(reversed(numpyResult))[1:] ], fps=25).write_videofile(os.path.join(output_path,'3d_kbe.mp4'), codec='mpeg4')

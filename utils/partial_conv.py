@@ -9,7 +9,7 @@
 import torch
 import torch.nn.functional as F
 from torch import nn, cuda
-from torch.autograd import Variable
+# Variable is deprecated in PyTorch 2.x, tensors can track gradients directly
 
 class PartialConv2d(nn.Conv2d):
     def __init__(self, *args, **kwargs):

@@ -100,9 +100,20 @@ CUDA_AVAILABLE_DEVICES=0 python train.py \
 
 ### CUDA Setup
 
-- Set `CUDA_HOME` environment variable to CUDA installation path
-- Update `path_to_math_helper` in `utils/common.py:14` to match your system
+- Set `CUDA_HOME` environment variable to CUDA installation path (scripts will default to `/usr/local/cuda`)
+- Helper math path automatically set to `utils/helper_math.h` in the repository
 - Minimum 6GB GPU memory recommended
+
+### PyTorch 2.7.1 and CuPy 13.4+ Compatibility
+
+- Code updated for PyTorch 2.7.1 compatibility from original 1.3.1
+- `torch.load` calls use explicit `weights_only` parameter for security
+- Removed deprecated `Variable` usage - tensors track gradients directly
+- Updated model loading to use new weights format (`weights='...'` instead of `pretrained=True`)
+- Fixed tensor type operations (`.float()` instead of `.type(torch.FloatTensor)`)
+- Updated CuPy API usage (`cupy.memoize` instead of `cupy.util.memoize`)
+- Fixed regex patterns in CUDA kernels (raw strings to avoid escape warnings)
+- Requirements updated to use `cupy-cuda12x` for CUDA 12.x compatibility
 
 ### Dataset Configuration
 

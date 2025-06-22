@@ -11,7 +11,7 @@ from models.disparity_refinement import Refine
 
 cuda = torch.cuda.is_available()
 device = "cuda:0" if cuda else "cpu"
-path_to_math_helper = '/home/s182169/Master_thesis/GAN-Burns-effect/utils/helper_math.h'
+path_to_math_helper = os.path.join(os.path.dirname(__file__), 'helper_math.h')
 
 def process_load(numpyImage, objectSettings, objectCommon):
 	objectCommon['dblFocal'] = 1024 / 2.0
@@ -99,7 +99,7 @@ def process_shift(objectSettings, objectCommon, dblFocal=None):
 	dblShiftY = dblClosestFromY - dblClosestToY
 	dblShiftZ = objectSettings['dblDepthTo'] - objectSettings['dblDepthFrom']
 
-	tensorShift = torch.FloatTensor([ dblShiftX, dblShiftY, dblShiftZ ]).view(1, 3, 1).cuda()
+	tensorShift = torch.tensor([ dblShiftX, dblShiftY, dblShiftZ ], dtype=torch.float32, device='cuda').view(1, 3, 1)
 
 	tensorPoints = objectSettings['tensorPoints'].clone()
 
@@ -265,7 +265,7 @@ def process_kenburns(objectSettings, objectCommon, moduleInpaint):
 ##########################################################
 
 class Stream:
-	ptr = torch.cuda.current_stream().cuda_stream
+	ptr = torch.cuda.current_stream()
 # end
 
 def preprocess_kernel(strKernel, objectVariables):
@@ -310,7 +310,7 @@ def preprocess_kernel(strKernel, objectVariables):
 	# end
 
 	while True:
-		objectMatch = re.search('(SIZE_)([0-4])(\()([^\)]*)(\))', strKernel)
+		objectMatch = re.search(r'(SIZE_)([0-4])(\()([^\)]*)(\))', strKernel)
 
 		if objectMatch is None:
 			break
@@ -325,7 +325,7 @@ def preprocess_kernel(strKernel, objectVariables):
 	# end
 
 	while True:
-		objectMatch = re.search('(STRIDE_)([0-4])(\()([^\)]*)(\))', strKernel)
+		objectMatch = re.search(r'(STRIDE_)([0-4])(\()([^\)]*)(\))', strKernel)
 
 		if objectMatch is None:
 			break
@@ -340,7 +340,7 @@ def preprocess_kernel(strKernel, objectVariables):
 	# end
 
 	while True:
-		objectMatch = re.search('(OFFSET_)([0-4])(\()([^\)]+)(\))', strKernel)
+		objectMatch = re.search(r'(OFFSET_)([0-4])(\()([^\)]+)(\))', strKernel)
 
 		if objectMatch is None:
 			break
@@ -356,7 +356,7 @@ def preprocess_kernel(strKernel, objectVariables):
 	# end
 
 	while True:
-		objectMatch = re.search('(VALUE_)([0-4])(\()([^\)]+)(\))', strKernel)
+		objectMatch = re.search(r'(VALUE_)([0-4])(\()([^\)]+)(\))', strKernel)
 
 		if objectMatch is None:
 			break
@@ -374,7 +374,7 @@ def preprocess_kernel(strKernel, objectVariables):
 	return strKernel
 # end
 
-@cupy.util.memoize(for_each_device=True)
+@cupy.memoize(for_each_device=True)
 def launch_kernel(strFunction, strKernel):
 	return cupy.cuda.compile_with_cache(strKernel, tuple([ '-I ' + os.environ['CUDA_HOME'], '-I ' + os.environ['CUDA_HOME'] + '/include' ])).get_function(strFunction)
 # end

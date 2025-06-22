@@ -10,9 +10,12 @@ from training.train_inpaint import TrainerInpaint
 from utils.data_loader import Dataset
 
 torch.backends.cudnn.enabled = True # make sure to use cudnn for computational performance
+torch.backends.cudnn.benchmark = True # optimize for consistent input sizes
 print('Number of threads used: ', torch.get_num_threads())
 
-os.environ['CUDA_HOME'] = '/opt/cuda/cuda-10.1' # change this to your cuda installation path
+# Set CUDA_HOME if not already set - adjust path for your system
+if 'CUDA_HOME' not in os.environ:
+    os.environ['CUDA_HOME'] = '/usr/local/cuda'  # Default CUDA path, adjust as needed
 
 #######################
 # DATASET DEFINITIONs #

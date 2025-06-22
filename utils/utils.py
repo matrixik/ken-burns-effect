@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
 from torch.nn.utils.spectral_norm import remove_spectral_norm, spectral_norm
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import models
@@ -119,9 +120,9 @@ def compute_metrics(depth, depth_gt, masks):
     depth_gt = depth_gt * masks + 1e-7
     
     thresh = torch.max((depth_gt / depth), (depth / depth_gt))
-    a1 = (thresh < 1.25     ).type(torch.FloatTensor).mean()
-    a2 = (thresh < 1.25 ** 2).type(torch.FloatTensor).mean()
-    a3 = (thresh < 1.25 ** 3).type(torch.FloatTensor).mean()
+    a1 = (thresh < 1.25     ).float().mean()
+    a2 = (thresh < 1.25 ** 2).float().mean()
+    a3 = (thresh < 1.25 ** 3).float().mean()
 
     rmse = (depth_gt - depth) ** 2
     rmse = torch.sqrt(rmse.mean())
@@ -162,7 +163,7 @@ def class_to_masks(pred):
         masks = []
         for c in img.unique():
             if c != 0:
-                masks.append((img == c).type(torch.FloatTensor).unsqueeze(0))
+                masks.append((img == c).float().unsqueeze(0))
         if len(masks)>0:
             batch_masks.append(torch.cat(masks, dim=0).to(device))
         else:
@@ -204,7 +205,7 @@ def load_models(models_list, models_paths, continue_training=False):
     print('Loading models parameters...')
     for idx, model in enumerate(models_paths):
         try:
-            checkpoint_disparity = torch.load(model)
+            checkpoint_disparity = torch.load(model, weights_only=False)
             models_list[idx]['model'].load_state_dict(checkpoint_disparity['model_state_dict'])
             if continue_training:
                 models_list[idx]['opt'].load_state_dict(checkpoint_disparity['optimizer_'+ models_list[idx]['type'] +'_state_dict'])
@@ -212,7 +213,8 @@ def load_models(models_list, models_paths, continue_training=False):
                 iter_nb = checkpoint_disparity['nb_iter']
             print('Model ' + models_list[idx]['type'] + ' loaded succesfully.')
         except:
-            models_list[idx]['model'].load_state_dict(torch.load(model))
+            # Try loading as a simple state dict (for .pth files without additional metadata)
+            models_list[idx]['model'].load_state_dict(torch.load(model, weights_only=False))
             print('Pre-trained model ' + models_list[idx]['type'] + ' loaded succesfully.')
     return iter_nb
 
@@ -443,7 +445,7 @@ class VGG16Partial(nn.Module):
         :param layer_num: number of layers
         """
         super().__init__()
-        vgg_model = models.vgg16(pretrained=True)
+        vgg_model = models.vgg16(weights='VGG16_Weights.IMAGENET1K_V1')
         vgg_model.features = make_vgg16_layers()
 
         vgg_pretrained_features = vgg_model.features
@@ -496,8 +498,8 @@ class VGG16Partial(nn.Module):
         std[:, 2, :, :] = 0.225
         batch = torch.div(batch, div_factor)
 
-        batch -= Variable(mean)
-        batch = torch.div(batch, Variable(std))
+        batch -= mean
+        batch = torch.div(batch, std)
         return batch
 
     def forward(self, x):
