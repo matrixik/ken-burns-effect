@@ -141,24 +141,24 @@ class KenBurnsGUI:
         start_pos_frame = ttk.Frame(start_frame)
         start_pos_frame.pack(fill=tk.X)
         ttk.Label(start_pos_frame, text="U:").pack(side=tk.LEFT)
-        ttk.Entry(start_pos_frame, textvariable=self.start_u, width=8).pack(
-            side=tk.LEFT, padx=(0, 10)
-        )
+        ttk.Spinbox(
+            start_pos_frame, textvariable=self.start_u, width=8, from_=0, to=99999
+        ).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Label(start_pos_frame, text="V:").pack(side=tk.LEFT)
-        ttk.Entry(start_pos_frame, textvariable=self.start_v, width=8).pack(
-            side=tk.LEFT
-        )
+        ttk.Spinbox(
+            start_pos_frame, textvariable=self.start_v, width=8, from_=0, to=99999
+        ).pack(side=tk.LEFT)
 
         start_size_frame = ttk.Frame(start_frame)
         start_size_frame.pack(fill=tk.X)
         ttk.Label(start_size_frame, text="W:").pack(side=tk.LEFT)
-        ttk.Entry(start_size_frame, textvariable=self.start_w, width=8).pack(
-            side=tk.LEFT, padx=(0, 10)
-        )
+        ttk.Spinbox(
+            start_size_frame, textvariable=self.start_w, width=8, from_=1, to=99999
+        ).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Label(start_size_frame, text="H:").pack(side=tk.LEFT)
-        ttk.Entry(start_size_frame, textvariable=self.start_h, width=8).pack(
-            side=tk.LEFT
-        )
+        ttk.Spinbox(
+            start_size_frame, textvariable=self.start_h, width=8, from_=1, to=99999
+        ).pack(side=tk.LEFT)
 
         # End position
         end_frame = ttk.LabelFrame(params_frame, text="End Position")
@@ -167,20 +167,24 @@ class KenBurnsGUI:
         end_pos_frame = ttk.Frame(end_frame)
         end_pos_frame.pack(fill=tk.X)
         ttk.Label(end_pos_frame, text="U:").pack(side=tk.LEFT)
-        ttk.Entry(end_pos_frame, textvariable=self.end_u, width=8).pack(
-            side=tk.LEFT, padx=(0, 10)
-        )
+        ttk.Spinbox(
+            end_pos_frame, textvariable=self.end_u, width=8, from_=0, to=99999
+        ).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Label(end_pos_frame, text="V:").pack(side=tk.LEFT)
-        ttk.Entry(end_pos_frame, textvariable=self.end_v, width=8).pack(side=tk.LEFT)
+        ttk.Spinbox(
+            end_pos_frame, textvariable=self.end_v, width=8, from_=0, to=99999
+        ).pack(side=tk.LEFT)
 
         end_size_frame = ttk.Frame(end_frame)
         end_size_frame.pack(fill=tk.X)
         ttk.Label(end_size_frame, text="W:").pack(side=tk.LEFT)
-        ttk.Entry(end_size_frame, textvariable=self.end_w, width=8).pack(
-            side=tk.LEFT, padx=(0, 10)
-        )
+        ttk.Spinbox(
+            end_size_frame, textvariable=self.end_w, width=8, from_=1, to=99999
+        ).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Label(end_size_frame, text="H:").pack(side=tk.LEFT)
-        ttk.Entry(end_size_frame, textvariable=self.end_h, width=8).pack(side=tk.LEFT)
+        ttk.Spinbox(
+            end_size_frame, textvariable=self.end_h, width=8, from_=1, to=99999
+        ).pack(side=tk.LEFT)
 
         # Options
         ttk.Label(parent, text="Options:").pack(anchor=tk.W, pady=(10, 5))
