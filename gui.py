@@ -14,16 +14,18 @@ class KenBurnsGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Ken Burns Effect Generator")
-        
+
         # Start maximized - cross-platform approach
         try:
-            self.root.state('zoomed')  # Windows
+            self.root.state("zoomed")  # Windows
         except:
             try:
-                self.root.attributes('-zoomed', True)  # Linux
+                self.root.attributes("-zoomed", True)  # Linux
             except:
                 # Fallback to manual maximization
-                self.root.geometry(f"{self.root.winfo_screenwidth()}x{self.root.winfo_screenheight()}+0+0")
+                self.root.geometry(
+                    f"{self.root.winfo_screenwidth()}x{self.root.winfo_screenheight()}+0+0"
+                )
 
         # Variables for configuration
         self.input_path = tk.StringVar()
@@ -47,13 +49,13 @@ class KenBurnsGUI:
         self.end_h = tk.IntVar(value=150)
 
         # Options
-        self.write_frames = tk.BooleanVar(value=True)
+        self.write_frames = tk.BooleanVar(value=False)
         self.dolly = tk.BooleanVar(value=False)
         self.twod = tk.BooleanVar(value=False)
 
         # Current process
         self.current_process = None
-        
+
         # Video playback variables
         self.video_cap = None
         self.video_playing = False
@@ -202,11 +204,16 @@ class KenBurnsGUI:
             fill=tk.X, pady=(0, 10)
         )
 
+        # Validate button
+        ttk.Button(
+            parent, text="Validate Parameters", command=self.validate_and_show
+        ).pack(fill=tk.X, pady=(10, 0))
+
         # Generate button
         self.generate_btn = ttk.Button(
             parent, text="Generate Ken Burns Effect", command=self.generate_effect
         )
-        self.generate_btn.pack(fill=tk.X, pady=(10, 0))
+        self.generate_btn.pack(fill=tk.X, pady=(5, 0))
 
         # Stop button
         self.stop_btn = ttk.Button(
@@ -229,9 +236,11 @@ class KenBurnsGUI:
         ttk.Button(controls_frame, text="Load Video", command=self.load_video).pack(
             side=tk.LEFT, padx=(0, 5)
         )
-        self.play_pause_btn = ttk.Button(controls_frame, text="Play", command=self.toggle_video)
+        self.play_pause_btn = ttk.Button(
+            controls_frame, text="Play", command=self.toggle_video
+        )
         self.play_pause_btn.pack(side=tk.LEFT, padx=(0, 5))
-        
+
         ttk.Button(controls_frame, text="Stop", command=self.stop_video).pack(
             side=tk.LEFT, padx=(0, 5)
         )
@@ -239,14 +248,20 @@ class KenBurnsGUI:
         # Progress info
         self.progress_var = tk.StringVar(value="Ready")
         ttk.Label(controls_frame, textvariable=self.progress_var).pack(side=tk.RIGHT)
-        
+
         # Video progress bar
         progress_frame = ttk.Frame(parent)
         progress_frame.pack(fill=tk.X, pady=(5, 0))
-        
-        self.video_progress = ttk.Scale(progress_frame, from_=0, to=100, orient=tk.HORIZONTAL, command=self.seek_video)
+
+        self.video_progress = ttk.Scale(
+            progress_frame,
+            from_=0,
+            to=100,
+            orient=tk.HORIZONTAL,
+            command=self.seek_video,
+        )
         self.video_progress.pack(fill=tk.X, padx=(0, 10), side=tk.LEFT, expand=True)
-        
+
         self.time_label = ttk.Label(progress_frame, text="00:00 / 00:00")
         self.time_label.pack(side=tk.RIGHT)
 
@@ -310,12 +325,20 @@ class KenBurnsGUI:
                     self.end_u.set(center_u)
                     self.end_v.set(center_v)
 
-                    self.start_w.set(w)
-                    self.start_h.set(h)
-                    self.end_w.set(w // 2)
-                    self.end_h.set(h // 2)
+                    # Use safe dimensions that fit within image bounds
+                    start_w = min(w, int(w * 0.9))  # 90% max to ensure safety
+                    start_h = min(h, int(h * 0.9))
+                    end_w = w // 2
+                    end_h = h // 2
 
-                    self.log_output("Applied half-size crop preset")
+                    self.start_w.set(start_w)
+                    self.start_h.set(start_h)
+                    self.end_w.set(end_w)
+                    self.end_h.set(end_h)
+
+                    self.log_output(
+                        f"Applied half-size crop preset ({start_w}x{start_h} → {end_w}x{end_h})"
+                    )
             except Exception as e:
                 self.log_output(f"Error applying preset: {e}")
 
@@ -350,21 +373,96 @@ class KenBurnsGUI:
                 if img is not None:
                     h, w = img.shape[:2]
 
-                    self.start_u.set(int(w * 0.3))
-                    self.start_v.set(h // 2)
-                    self.end_u.set(int(w * 0.7))
-                    self.end_v.set(h // 2)
+                    # Use smaller crop size to ensure it fits within bounds
+                    crop_w = int(w * 0.6)  # Reduced from 0.8
+                    crop_h = int(h * 0.6)  # Reduced from 0.8
 
-                    crop_w = int(w * 0.8)
-                    crop_h = int(h * 0.8)
+                    # Calculate valid center positions
+                    min_u = crop_w // 2
+                    max_u = w - crop_w // 2
+                    min_v = crop_h // 2
+                    max_v = h - crop_h // 2
+
+                    # Pan from left to right with safe margins
+                    start_u = min_u + int((max_u - min_u) * 0.1)  # 10% from left edge
+                    end_u = max_u - int((max_u - min_u) * 0.1)  # 10% from right edge
+                    center_v = h // 2
+
+                    self.start_u.set(start_u)
+                    self.start_v.set(center_v)
+                    self.end_u.set(end_u)
+                    self.end_v.set(center_v)
                     self.start_w.set(crop_w)
                     self.start_h.set(crop_h)
                     self.end_w.set(crop_w)
                     self.end_h.set(crop_h)
 
-                    self.log_output("Applied pan-right preset")
+                    self.log_output(
+                        f"Applied pan-right preset (crop: {crop_w}x{crop_h}, pan: {start_u}→{end_u})"
+                    )
             except Exception as e:
                 self.log_output(f"Error applying preset: {e}")
+
+    def validate_parameters(self):
+        """Validate Ken Burns parameters against image dimensions"""
+        try:
+            img = cv2.imread(self.input_path.get())
+            if img is None:
+                return False, "Could not read input image"
+
+            h, w = img.shape[:2]
+
+            # Check start position
+            start_u, start_v = self.start_u.get(), self.start_v.get()
+            start_w, start_h = self.start_w.get(), self.start_h.get()
+
+            if start_u - start_w / 2 < 0 or start_u + start_w / 2 > w:
+                return (
+                    False,
+                    f"Start window extends beyond image width (U={start_u}, W={start_w}, image width={w})",
+                )
+            if start_v - start_h / 2 < 0 or start_v + start_h / 2 > h:
+                return (
+                    False,
+                    f"Start window extends beyond image height (V={start_v}, H={start_h}, image height={h})",
+                )
+
+            # Check end position
+            end_u, end_v = self.end_u.get(), self.end_v.get()
+            end_w, end_h = self.end_w.get(), self.end_h.get()
+
+            if end_u - end_w / 2 < 0 or end_u + end_w / 2 > w:
+                return (
+                    False,
+                    f"End window extends beyond image width (U={end_u}, W={end_w}, image width={w})",
+                )
+            if end_v - end_h / 2 < 0 or end_v + end_h / 2 > h:
+                return (
+                    False,
+                    f"End window extends beyond image height (V={end_v}, H={end_h}, image height={h})",
+                )
+
+            return True, "Parameters are valid"
+
+        except Exception as e:
+            return False, f"Validation error: {e}"
+
+    def validate_and_show(self):
+        """Validate parameters and show result"""
+        if not self.input_path.get():
+            messagebox.showwarning("No Image", "Please select an input image first")
+            return
+
+        valid, message = self.validate_parameters()
+        if valid:
+            messagebox.showinfo(
+                "Validation Passed",
+                "✓ All parameters are valid and within image bounds",
+            )
+            self.log_output("Parameter validation passed")
+        else:
+            messagebox.showerror("Validation Failed", message)
+            self.log_output(f"Parameter validation failed: {message}")
 
     def generate_effect(self):
         """Generate Ken Burns effect"""
@@ -374,6 +472,13 @@ class KenBurnsGUI:
 
         if not os.path.exists(self.input_path.get()):
             messagebox.showerror("Error", "Input image file does not exist")
+            return
+
+        # Validate parameters
+        valid, message = self.validate_parameters()
+        if not valid:
+            messagebox.showerror("Invalid Parameters", message)
+            self.log_output(f"Validation failed: {message}")
             return
 
         # Build command
@@ -477,7 +582,7 @@ class KenBurnsGUI:
             output_dir = self.output_path.get()
             if os.path.exists(output_dir):
                 for file in os.listdir(output_dir):
-                    if file.endswith('.mp4'):
+                    if file.endswith(".mp4"):
                         video_path = os.path.join(output_dir, file)
                         self.load_video_file(video_path)
                         break
@@ -518,47 +623,49 @@ class KenBurnsGUI:
             # Close existing video if any
             if self.video_cap:
                 self.video_cap.release()
-                
+
             # Stop current playback
             self.stop_video()
-            
+
             # Open new video
             self.video_cap = cv2.VideoCapture(filename)
-            
+
             if not self.video_cap.isOpened():
                 self.log_output(f"Error: Could not open video {filename}")
                 return
-                
+
             # Get video properties
             self.video_fps = self.video_cap.get(cv2.CAP_PROP_FPS) or 30
             self.total_frames = int(self.video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
             self.current_frame = 0
-            
+
             # Update progress bar
             self.video_progress.configure(to=self.total_frames - 1)
             self.video_progress.set(0)
-            
+
             # Display first frame
             self.display_current_frame()
-            
+
             # Update time display
             self.update_time_display()
-            
-            self.log_output(f"Loaded video: {os.path.basename(filename)} ({self.total_frames} frames, {self.video_fps:.1f} fps)")
-            
+
+            self.log_output(
+                f"Loaded video: {os.path.basename(filename)} ({self.total_frames} frames, {self.video_fps:.1f} fps)"
+            )
+
         except Exception as e:
             self.log_output(f"Error loading video: {e}")
-            
+
     def display_current_frame(self):
         """Display the current frame on the canvas"""
         if not self.video_cap:
             return
-            
+
         try:
             # Set frame position
             self.video_cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video_cap.read()
-            
+
             if ret:
                 # Convert BGR to RGB
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -593,7 +700,7 @@ class KenBurnsGUI:
                         anchor=tk.CENTER,
                     )
                     self.video_canvas.image = photo  # Keep reference
-                    
+
         except Exception as e:
             self.log_output(f"Error displaying frame: {e}")
 
@@ -602,92 +709,94 @@ class KenBurnsGUI:
         if not self.video_cap:
             self.log_output("No video loaded")
             return
-            
+
         if self.video_playing:
             self.pause_video()
         else:
             self.play_video()
-            
+
     def play_video(self):
         """Start video playback"""
         if not self.video_cap:
             return
-            
+
         self.video_playing = True
         self.video_paused = False
         self.play_pause_btn.config(text="Pause")
         self.play_next_frame()
-        
+
     def pause_video(self):
         """Pause video playback"""
         self.video_playing = False
         self.video_paused = True
         self.play_pause_btn.config(text="Play")
-        
+
         # Cancel scheduled frame update
         if self.video_after_id:
             self.root.after_cancel(self.video_after_id)
             self.video_after_id = None
-            
+
     def stop_video(self):
         """Stop video playback and reset to beginning"""
         self.video_playing = False
         self.video_paused = False
         self.play_pause_btn.config(text="Play")
-        
+
         # Cancel scheduled frame update
         if self.video_after_id:
             self.root.after_cancel(self.video_after_id)
             self.video_after_id = None
-            
+
         # Reset to first frame
         if self.video_cap:
             self.current_frame = 0
             self.video_progress.set(0)
             self.display_current_frame()
             self.update_time_display()
-            
+
     def play_next_frame(self):
         """Play the next frame"""
         if not self.video_playing or not self.video_cap:
             return
-            
+
         # Check if we've reached the end
         if self.current_frame >= self.total_frames - 1:
             self.stop_video()
             return
-            
+
         # Advance frame and display
         self.current_frame += 1
         self.display_current_frame()
         self.video_progress.set(self.current_frame)
         self.update_time_display()
-        
+
         # Schedule next frame
         delay = int(1000 / self.video_fps)  # Convert to milliseconds
         self.video_after_id = self.root.after(delay, self.play_next_frame)
-        
+
     def seek_video(self, value):
         """Seek to specific frame"""
         if not self.video_cap:
             return
-            
+
         self.current_frame = int(float(value))
         self.display_current_frame()
         self.update_time_display()
-        
+
     def update_time_display(self):
         """Update the time display"""
         if not self.video_cap:
             self.time_label.config(text="00:00 / 00:00")
             return
-            
+
         current_seconds = self.current_frame / self.video_fps
         total_seconds = self.total_frames / self.video_fps
-        
-        current_time = f"{int(current_seconds // 60):02d}:{int(current_seconds % 60):02d}"
+
+        current_time = (
+            f"{int(current_seconds // 60):02d}:{int(current_seconds % 60):02d}"
+        )
         total_time = f"{int(total_seconds // 60):02d}:{int(total_seconds % 60):02d}"
-        
+
         self.time_label.config(text=f"{current_time} / {total_time}")
 
     def log_output(self, message):
