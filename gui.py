@@ -14,7 +14,16 @@ class KenBurnsGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Ken Burns Effect Generator")
-        self.root.geometry("1200x800")
+        
+        # Start maximized - cross-platform approach
+        try:
+            self.root.state('zoomed')  # Windows
+        except:
+            try:
+                self.root.attributes('-zoomed', True)  # Linux
+            except:
+                # Fallback to manual maximization
+                self.root.geometry(f"{self.root.winfo_screenwidth()}x{self.root.winfo_screenheight()}+0+0")
 
         # Variables for configuration
         self.input_path = tk.StringVar()
